@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Todo Pro</title>
+
+<style>
+:root{
+  --bg:#0f172a;
+  --card:rgba(255,255,255,0.08);
+  --text:white;
+  --accent:#38bdf8;
+}
+
+.light{
+  --bg:#f1f5f9;
+  --card:white;
+  --text:black;
+  --accent:#0ea5e9;
+}
+
+body{
+  margin:0;
+  font-family:Arial;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+
+.container{
+  width:450px;
+  background:var(--card);
+  padding:20px;
+  border-radius:15px;
+  backdrop-filter:blur(10px);
+}
+
+h2{
+  text-align:center;
+  color:var(--accent);
+}
+
+/* top controls */
+.top{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.row{
+  display:flex;
+  gap:8px;
+}
+
+input, select{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  outline:none;
+}
+
+button{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:var(--accent);
+  color:white;
+  cursor:pointer;
+}
+
+ul{
+  list-style:none;
+  padding:0;
+  margin-top:15px;
+}
+
+li{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:rgba(255,255,255,0.1);
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+}
+
+.done{
+  text-decoration:line-through;
+  opacity:0.6;
+}
+
+.badge{
+  font-size:12px;
+  padding:3px 8px;
+  border-radius:6px;
+  margin-left:5px;
+}
+
+.high{background:red;color:white;}
+.medium{background:orange;color:white;}
+.low{background:green;color:white;}
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🎓 Student Todo Pro</h2>
+
+<!-- SEARCH -->
+<input id="search" placeholder="Search tasks..." onkeyup="loadTasks()">
+
+<!-- INPUTS -->
+<div class="top">
+
+<div class="row">
+<input id="taskInput" placeholder="Task name">
+<select id="priority">
+  <option value="high">High</option>
+  <option value="medium">Medium</option>
+  <option value="low">Low</option>
+</select>
+</div>
+
+<div class="row">
+<input type="date" id="dateInput">
+<button onclick="addTask()">Add</button>
+<button onclick="toggleMode()">🌙</button>
+</div>
+
+</div>
+
+<button onclick="clearAll()">Clear All</button>
+
+<div class="stats">
+  <span id="total"></span>
+  <span id="done"></span>
+</div>
+
+<ul id="list"></ul>
+
+</div>
+
+<script>
+
+window.onload = loadTasks;
+
+function addTask(){
+  let task = document.getElementById("taskInput").value;
+  let priority = document.getElementById("priority").value;
+  let date = document.getElementById("dateInput").value;
+
+  if(task.trim() === "") return;
+
+  let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+  tasks.push({
+    text:task,
+    priority:priority,
+    date:date,
+    done:false
+  });
+
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+
+  document.getElementById("taskInput").value = "";
+  loadTasks();
+}
+
+function loadTasks(){
+
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  let search = document.getElementById("search").value.toLowerCase();
+  let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+  let total = tasks.length;
+  let doneCount = tasks.filter(t=>t.done).length;
+
+  document.getElementById("total").innerText = "Total: " + total;
+  document.getElementById("done").innerText = "Done: " + doneCount;
+
+  tasks.forEach((t,i)=>{
+
+    if(!t.text.toLowerCase().includes(search)) return;
+
+    let li = document.createElement("li");
+
+    li.innerHTML = `
+      <div onclick="toggleTask(${i})">
+        <span class="${t.done?'done':''}">${t.text}</span>
+        <span class="badge ${t.priority}">${t.priority}</span>
+        <small>📅 ${t.date || 'No date'}</small>
+      </div>
+
+      <button onclick="deleteTask(${i})">🗑</button>
+    `;
+
+    list.appendChild(li);
+  });
+}
+
+function toggleTask(i){
+  let tasks = JSON.parse(localStorage.getItem("tasks"));
+  tasks[i].done = !tasks[i].done;
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  loadTasks();
+}
+
+function deleteTask(i){
+  let tasks = JSON.parse(localStorage.getItem("tasks"));
+  tasks.splice(i,1);
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  loadTasks();
+}
+
+function clearAll(){
+  localStorage.removeItem("tasks");
+  loadTasks();
+}
+
+function toggleMode(){
+  document.body.classList.toggle("light");
+}
+
+</script>
+
+</body>
+</html>
